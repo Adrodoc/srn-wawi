@@ -1,0 +1,46 @@
+apply plugin: 'eclipse'
+
+import groovy.sql.Sql
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.0'
+}
+
+ext.libs = [
+  ojdbc:    'org.postgresql:postgresql:42.1.1'
+]
+
+repositories {
+  mavenCentral()
+}
+
+configurations {
+  driver
+}
+
+dependencies {
+  driver libs.ojdbc
+}
+
+URLClassLoader loader = GroovyObject.class.classLoader
+configurations.driver.each {File file ->
+  loader.addURL(file.toURL())
+}
+
+Properties db = new Properties()
+file('properties/database.properties').withInputStream {
+  db.load(it)
+}
+
+task resetDatabase {
+  doLast {
+    Sql sql = Sql.newInstance(db.URL, db.USER, db.PASSWORD, db.DRIVER)
+    def scripts = fileTree(dir: 'src/main/sql', include: '**/*.sql')
+    scripts.each { File file ->
+      logger.lifecycle 'Executing File ' + file
+      file.text.split('---').each { String script ->
+        sql.execute script
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.gradle
+**/.project
+**/.settings
+**/bin
+**/build
+**/src-gen
+properties
